@@ -85,14 +85,12 @@ exclude it as described in [Presenting a case](#presenting-a-case)
 -- or a blind spot of the tooling. Say what each new test proves,
 not which lines it turns green.
 
-Here: PR #879 added a test calling `_RemoteFile._cleanup()` by hand,
-without assertions, to cover its early return on an already-closed
-handle. Real use already takes that branch: `__exit__()` closes the
-handle and `__dealloc__()` runs `_cleanup()` again, and a failed
-`sftp_open()` deallocates an object whose handle was never set.
-With Cython line tracing on, dozens of other tests in
-`tests/unit/sftp_test.py`, including plain `SFTP.get()` and
-`SFTP.put()` calls, were already recorded taking it.
+Here: the whole plugin lives in the private `_plugin` module, and
+tox only reaches it through the entry point -- the integration
+tests drive it the same way, through real tox runs.
+`tests/smoke_test.py` imports `_plugin` directly with an assertion
+that can't fail. It's a skeleton check that predates this rule,
+not a pattern to copy.
 
 ## Presenting a case
 
@@ -160,8 +158,9 @@ them unasked. Point them out to the operator if they're in the
 area you're touching. Removing a suppression that's no longer
 needed is welcome, but show it too.
 
-Here: e.g. the bare `# noqa: DAR101` lines in `tests/conftest.py`,
-without an explanation.
+Here: e.g. the bare `# noqa: WPS347` on the `collections.abc`
+import in `src/tox_plugins/towncrier/_plugin.py`, without an
+explanation.
 
 ## Tool-config changes are standalone
 

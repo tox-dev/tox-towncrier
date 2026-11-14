@@ -68,21 +68,16 @@ not get appended to it. Always check what a given env's default
 posargs actually are (`tox config -e <env>`, or read `tox.ini`)
 before assuming `--` just "adds more flags."
 
-Here: `py` and `just-pytest` use a bare `{posargs:}`, so e.g.
-`tox run -e py -- -n0` (disabling `pytest-xdist` parallelism)
-loses nothing. Other envs do have non-empty defaults:
+Here: two envs have non-empty defaults:
 
-- `pre-commit` defaults to `--all-files`; passing
-  `-- --files <path>...` checks only those files instead.
-- `build-docs`'s Sphinx invocation defaults to a full flag set
-  (`-j auto -b html ... -a -n -W --keep-going -d ... . <output>`)
-  -- passing any custom posargs there replaces the whole thing.
-- `make-changelog`'s default posargs are `'[UNRELEASED DRAFT]'
-  --draft` (draft-preview mode); its own `description` field
-  documents overriding this deliberately -- passing a real version
-  after `--` (e.g. `tox run -e make-changelog -- 1.3.2`) switches
-  it into actually cutting that release, dropping `--draft`
-  entirely.
+- `py`'s `pytest` invocation defaults to
+  `--cov-report=html:{envtmpdir}{/}htmlcov{/}` -- the `-k smoke`
+  run above drops the HTML coverage report, and the hint on how
+  to open it along with it.
+- `pre-commit` defaults to `--all-files`; passing a hook ID alone
+  (`tox run -e pre-commit -- mypy`) only checks the staged files.
+  Its own `description` field documents adding `--all-files`
+  back.
 
 ## Read the tool's own output
 
@@ -91,9 +86,10 @@ artifact landed, how to open or serve it, how to install hooks.
 Read what the invocation actually printed instead of guessing a
 path or a next step.
 
-Here: `build-docs` prints where the built HTML docs landed and how
-to serve them locally; `pre-commit` prints a reminder of how to
-install its hooks into Git.
+Here: `py` prints where the HTML coverage report landed and how
+to open or serve it locally; `pre-commit` prints where the MyPy
+reports landed, and a reminder of how to install its hooks into
+Git.
 
 ## Parse structured output, not text meant for humans
 

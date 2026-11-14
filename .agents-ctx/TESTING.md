@@ -30,10 +30,7 @@ Deleting, commenting out, skipping, xfailing, or weakening a test
 is never the agent's call -- see
 [DONT_SHOOT_THE_MESSENGER.md](DONT_SHOOT_THE_MESSENGER.md).
 
-Here: `.codecov.yml` targets 100% for `src/`/`tests/`. It isn't
-wired up as a required CI check yet, only because of unresolved
-infra problems measuring Cython coverage -- not because it's
-considered optional.
+Here: `.codecov.yml` targets 100%.
 
 ## Tests state what the code should do, not what it does
 
@@ -61,17 +58,19 @@ Doing so counts as silencing -- see
   code, say so to the operator instead of copying it from the
   current output.
 
-Here: the live `sshd` in every test is the main independent
-oracle -- prefer comparing against what the server, or the OpenSSH
-client against the same server, actually does.
+Here: the integration tests run real tox, so tox's and the
+Towncrier tool's documented behavior -- e.g. how posargs replace a
+default, or what `towncrier build --draft` does -- is the
+reference, not the plugin's own code.
 
 ## No test classes
 
 Every test in `tests/` is a plain `def test_*` function. Don't
 introduce `unittest.TestCase` subclasses or bare grouping classes.
 
-Here: there are zero `class` definitions anywhere in the test
-suite, across the full project history.
+Here: the only class in `tests/` is `EntryPointParam` in
+`tests/importable_test.py`, a frozen dataclass holding
+`parametrize` values -- data, not a test grouping.
 
 ## Prefer parametrize/fixtures over duplicated test logic
 
@@ -85,21 +84,18 @@ test should be parametrized instead. The one accepted exception is
 `pytest-subtests` (the `subtests` fixture), for structured,
 individually reported sub-assertions within one test.
 
-Here: PR #638's result is
-`@pytest.fixture(params=(32, SFTP_MAX_CHUNK + 1), ids=(...))`,
-replacing `other_payload`/`large_payload`. A later commit merges
-near-duplicate `NOTSET`/`TRACE` tests into a single
-`@pytest.mark.parametrize` case.
-
 ## Real e2e over mocking
 
 Don't introduce mocking as a substitute for exercising the real
 behavior of the components involved.
 
-Here: `tests/` contains zero uses of `mock`, `Mock`, or
-`monkeypatch`. Every test -- unit and integration alike --
-exercises a real `sshd` process spun up per-test via the
-`sshd_addr` fixture in `tests/conftest.py`.
+Here: the integration tests use the `tox_project` fixture from
+`tox.pytest` to create real tox projects in `tmp_path` and run
+tox against them, with the plugin loaded. The one `monkeypatch`
+use, in `tests/conftest.py`, sets `TOX_USER_CONFIG_FILE` to keep
+the operator's own tox config out of the tests -- an environment
+variable, i.e. a system boundary (see below). `pytest.ini`'s
+`usefixtures` applies it to every test.
 
 ## Design for testability
 
@@ -130,11 +126,11 @@ the entry point, loaded as a local pytest plugin.
 - Code running in child processes only gets its coverage recorded
   when those processes exit cleanly instead of being killed.
 
-Here: stubs live in `tests/_stubs/<component>/`, discovered via
-`pytest_plugins` in `tests/conftest.py`, and excluded through
-`norecursedirs` in `pytest.ini`. `tests/_stubs/sshd_mitm_tcp_relay/`
-is the first one. Child-process coverage relies on
-`concurrency = multiprocessing` in `.coveragerc`.
+Here: there are no test doubles yet. The first one would go in
+`tests/_stubs/<component>/`, added to `pytest_plugins` in
+`tests/conftest.py` next to `tox.pytest`, and excluded through
+`norecursedirs` in `pytest.ini` -- the same layout ansible/pylibssh
+uses.
 
 ## Test layout
 
@@ -146,11 +142,9 @@ the source modules -- `<module>_test.py`, with a new file only for
 a genuinely new module -- while integration tests are organized by
 scenario or feature instead.
 
-Here: `tests/unit/` mirrors `src/pylibsshext/` -- `channel_test.py`,
-`session_test.py`, `sftp_test.py`, `scp_test.py`, `version_test.py`.
-The correspondence isn't strict 1:1: `errors` is covered via
-`pytest.raises` inside other files, not its own file.
-`tests/integration/` holds the scenario-based tests.
+Here: `tests/` is flat -- `smoke_test.py` (importability),
+`importable_test.py` (entry-point exposure), and
+`integration_test.py` (behavior through real tox runs).
 
 ## Tests usually land in the same commit as the behavior they cover
 
@@ -202,8 +196,6 @@ large printable payloads is inefficient, and random bytes exercise
 the code more realistically at scale. This is a tradeoff that
 shifts with implementation maturity, not a blanket "always use
 random data" rule.
-
-Here: the file-transfer tests moved to random payloads in PR #872.
 
 ## Type annotations on new tests
 
