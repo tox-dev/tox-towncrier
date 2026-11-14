@@ -13,7 +13,17 @@ count =
 
 # NOTE: `ignore-words` should be uncommented once we have Sphinx
 # ignore-words = docs/spelling_wordlist.txt
-ignore-words-list = THIRDPARTY
+
+# Ref: https://dictionary.cambridge.org/fr/dictionnaire/anglais/fait-accompli
+# faits accomplis
+ignore-words-list =
+  accomplis,
+  ccompiler,
+  dialogue,
+  gotcha,
+  jupyter,
+  THIRDPARTY,
+  UIs,
 # NOTE: `cancelled()` is a common helper function in GHA
 ignore-regex = \b!?cancelled()\b
 
