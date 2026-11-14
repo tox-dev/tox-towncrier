@@ -10,7 +10,7 @@ import pytest
 pytest_plugins = ('tox.pytest',)
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def _isolate_user_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     """Isolate the tests from the user's tox configuration.
 

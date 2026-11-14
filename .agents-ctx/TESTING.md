@@ -94,8 +94,7 @@ Here: the integration tests use the `tox_project` fixture from
 tox against them, with the plugin loaded. The one `monkeypatch`
 use, in `tests/conftest.py`, sets `TOX_USER_CONFIG_FILE` to keep
 the operator's own tox config out of the tests -- an environment
-variable, i.e. a system boundary (see below). `pytest.ini`'s
-`usefixtures` applies it to every test.
+variable, i.e. a system boundary (see below).
 
 ## Design for testability
 
